@@ -1,123 +1,225 @@
-# Bookshop Demo
+# 📚 Bookstore - Dự Án Sách Trực Tuyến
 
-Bookshop is a virtual online bookstore application through which you can find books of various categories and rate the books.
+Ứng dụng cửa hàng sách trực tuyến được xây dựng với Next.js, Prisma và TiDB Cloud.
 
-You can perform CRUD operations such as viewing book details, adding and deleting ratings, editing book inventory, etc.
+## 🚀 Demo
 
-> Powered by TiDB Cloud, Prisma and Vercel.
+**Truy cập demo:** https://tidb-prisma-vercel-demo.vercel.app/
 
-## 🔥 Visit Live Demo
+---
 
-[👉 Click here to visit](https://tidb-prisma-vercel-demo.vercel.app/)
+## 🖼️ Wireframe & Giao Diện
 
-![image](https://github.com/pingcap/tidb-prisma-vercel-demo/assets/56986964/2ef5fd7f-9023-45f4-b639-f4ba4ddec157)
+### 1. Trang Chủ (Homepage)
 
-## Deploy on Vercel
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [Logo] Bookstore              🔍 Tìm kiếm  👤 Đăng nhập  🛒 Giỏ  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│    ╔═══════════════════════════════════════════════════════╗    │
+│    ║    CHÀO MỪNG ĐẾN VỚI BOOKSTORE           ║    │
+│    ║    Khám phá ngàn đầu sách hay nhất          ║    │
+│    ║                                           ║    │
+│    ║    [Browse Books]  [Đăng ký ngay]         ║    │
+│    ╚═══════════════════════════════════════════════╝    │
+│                                                             │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │  📖 SÁCH NỔI BẬT                                  │  │
+│  ├─────────────────────────────────────────────────┤  │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐              │  │
+│  │  │ 📕  │ │ 📘  │ │ 📗  │ │ 📙  │              │  │
+│  │  │Gatsby│ │ 1984 │ │Alchem│ │Hobbit│              │  │
+│  │  │$12.9│ │$14.9 │ │$10.9│ │$15.9│              │  │
+│  │  │ ⭐4.5│ │ ⭐4.8│ │ ⭐4.5│ │ ⭐4.9│              │  │
+│  │  └──────┘ └──────┘ └──────┘ └──────┘              │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │  VỀ CHÚNG TÔI                                        │  │
+│  │  ...                                                 │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  © 2024 Bookstore - Bản quyền                          │
+└──────────────────────────────────────────────��──────────────┘
+```
 
-## 🧑‍🍳 Before We Start
+### 2. Chi Tiết Sách (Book Detail)
 
-Create a [TiDB Cloud](https://tidbcloud.com/) account and get your free trial cluster.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🏠 Trang chủ / Sách / [Tên sách]                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────┬────────────────────────────────┐│
+│  │                     │  [Loại: Novel]                    ││
+│  │   ┌─────────────┐    │                                ││
+│  │   │           │    │  Tên sách: [Title]             ││
+│  │   │   📕      │    │  Tác giả: [Author Name]         ││
+│  │   │  COVER    │    │  ⭐⭐⭐⭐⭐ (4.5) - 12 đánh giá ││
+│  │   │           │    │  Ngày: DD/MM/YYYY              ││
+│  │   │           │    │  Giá: $XX.XX                   ││
+│  │   └─────────────┘    │  Còn XX trong kho               ││
+│  │                     │                                ││
+│  │                     │  [🛒 Thêm vào giỏ]             ││
+│  └─────────────────────┴────────────────────────────────┘│
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │  ĐÁNH GIÁ KHÁCH HÀNG (XX đánh giá)                    │  │
+│  │  ┌──────────────────────────────────────────────┐  │  │
+│  │  │ 👤 User1    ⭐⭐⭐⭐⭐ - 01/01/2024          │  │  │
+│  │  │ Review text here...                        │  │  │
+│  │  └──────────────────────────────────────────────┘  │  │
+│  └─────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### 🚀 One Click Deploy
+### 3. Giỏ Hàng (Cart)
 
-You can click the button to quickly deploy this demo if already has an TiDB Cloud cluster.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ← Tiếp tục mua sắm           GIỎ HÀNG                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │  ┌────┐  Tên sách                    [- 1 +]  $XX.XX  │  │
+│  │  │📕 │  Tác giả                       [🗑️]        │  │
+│  │  └────┘                                              │  │
+│  └──────────────��──────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │  ┌────┐  Tên sách                    [- 2 +]  $XX.XX  │  │
+│  │  │📕 │  Tác giả                       [🗑️]        │  │
+│  │  └────┘                                              │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │  Tổng cộng (X sản phẩm):          $XXX.XX           │  │
+│  │                                               [Thanh toán]│
+│  └─────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-title=TiDB%20Cloud%20Starter&demo-description=A%20bookstore%20demo%20built%20on%20TiDB%20Cloud%20and%20Next.js.&demo-url=https%3A%2F%2Ftidb-prisma-vercel-demo.vercel.app%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F2HMASOQn8hQit2IFi2hK3j%2Fcfe7cc2aeba4b8f6760a3ea14c32f707%2Fscreenshot-20220902-160324_-_Chen_Zhen.png&project-name=TiDB%20Cloud%20Starter&repository-name=tidb-cloud-starter&repository-url=https%3A%2F%2Fgithub.com%2Fpingcap%2Ftidb-prisma-vercel-demo&from=templates&integration-ids=oac_coKBVWCXNjJnCEth1zzKoF1j)
+### 4. Đăng Nhập / Đăng Ký
 
-> Integration will guide you connect your TiDB Cloud cluster to Vercel.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│              ┌───────────────────────┐                      │
+│              │      ĐĂNG NHẬP        │                      │
+│              ├───────────────────────┤                      │
+│              │  📧 Email            │                      │
+│              │  ┌─────────────────┐  │                      │
+│              │  │ email@test.com │  │                      │
+│              │  └─────────────────┘  │                      │
+│              │  🔑 Mật khẩu          │                      │
+│              │  ┌─────────────────┐  │                      │
+│              │  │ ********      │  │                      │
+│              │  └─────────────────┘  │                      │
+│              │                       │                      │
+│              │   [ĐĂNG NHẬP]          │                      │
+│              │                       │                      │
+│              │  Chưa có tài khoản?   │                      │
+│              │  [Đăng ký ngay]       │                      │
+│              └───────────────────────┘                      │
+└─────────────────────────────────────────────────────────────┘
+```
 
-<details>
-  <summary><h3>Manually Deploy (Not recommended)</h3></summary>
+---
 
-#### 1. Get connection details
+## 🛠️ Công Nghệ
 
-You can get the connection details by clicking the `Connect` button.
+| Công nghệ | Mô tả |
+|-----------|-------|
+| **Next.js 13** | Framework React hiện đại |
+| **Prisma** | ORM cho database |
+| **TiDB Cloud** | Database MySQL cloud |
+| **Tailwind CSS** | Styling hiện đại |
+| **Recoil** | State management |
+| **JWT** | Authentication |
 
-![image](https://github.com/pingcap/tidb-prisma-vercel-demo/assets/56986964/86e5df8d-0d61-49ca-a1a8-d53f2a3f618c)
+---
 
-Get `User` and `Host` field from the dialog.
-
-> Note: For importing initial data from local, you can set an Allow All traffic filter here by entering an IP address of `0.0.0.0/0`.
-
-![image](https://github.com/pingcap/tidb-prisma-vercel-demo/assets/56986964/8d32ed58-4edb-412f-8af8-0e1303cceed9)
-
-Your `DATABASE_URL` should look like `mysql://<User>:<Password>@<Host>:4000/bookshop`
-
-#### 2. Deploy on Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fpingcap%2Ftidb-prisma-vercel-demo&repository-name=tidb-prisma-vercel-demo&env=DATABASE_URL&envDescription=TiDB%20Cloud%20connection%20string&envLink=https%3A%2F%2Fdocs.pingcap.com%2Ftidb%2Fdev%2Fdev-guide-build-cluster-in-cloud&project-name=tidb-prisma-vercel-demo)
-
-![image](https://user-images.githubusercontent.com/56986964/199161016-2d236629-bb6a-4e3c-a700-c0876523ca6a.png)
-
-</details>
-
-## Deploy on AWS Linux
-
-### Install git and nodejs pkgs
+## 📦 Cài Đặt
 
 ```bash
-sudo yum install -y git
+# Clone dự án
+git clone https://github.com/truonghai0927-creator/BookStore-TruongHai1.git
+cd BookStore-TruongHai1
 
-# Ref: https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash;
-source ~/.bashrc;
-nvm install --lts;
-node -e "console.log('Running Node.js ' + process.version)"
+# Cài đặt dependencies
+yarn install
+
+# Chạy migration
+npx prisma migrate dev
+
+# Chạy development server
+yarn dev
 ```
 
-### Clone the repository
+---
 
-```bash
-git clone https://github.com/pingcap/tidb-prisma-vercel-demo.git;
-cd tidb-prisma-vercel-demo;
-```
-
-### Install dependencies
-
-```bash
-corepack enable;
-corepack yarn install;
-yarn;
-```
-
-### Connect to TiDB Cloud and create a database
-
-```bash
-mysql -h gateway01.us-west-2.prod.aws.tidbcloud.com -P 4000 -u user -p
-```
+## 🌳 Cấu Trúc Dự Án
 
 ```
-mysql> create database tidb_labs_bookshop;
+BookStore/
+├── components/
+│   ├── BookCard.tsx       # Thẻ sách
+│   ├── BookList.tsx      # Danh sách sách
+│   ├── Footer.tsx       # Chân trang
+│   ├── Hero.tsx         # Banner chính
+│   ├── Navbar.tsx      # Thanh điều hướng
+│   └── ThemeToggle.tsx # Chuyển đổi dark/light
+├── contexts/            # React Context
+├── lib/
+│   ├── auth.ts         # Auth utilities
+│   ├── http.ts        # API functions
+│   └── prisma.ts     # Prisma client
+├── pages/
+│   ├── api/          # API routes
+│   ├── book/[id].tsx # Chi tiết sách
+│   ├── cart.tsx      # Giỏ hàng
+│   ├── index.tsx     # Trang chủ
+│   ├── login.tsx     # Đăng nhập
+│   └── register.tsx  # Đăng ký
+└── prisma/
+    └── schema.prisma # Database schema
 ```
 
-### Set environment variables
+---
 
-```bash
-export DATABASE_URL=mysql://user:pass@gateway01.us-west-2.prod.aws.tidbcloud.com:4000/tidb_labs_bookshop
-```
+## 📝 API Endpoints
 
-### Build the project
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | `/api/books` | Lấy danh sách sách |
+| GET | `/api/books/:id` | Lấy chi tiết sách |
+| GET | `/api/books/:id/ratings` | Lấy đánh giá |
+| POST | `/api/books/:id/ratings` | Thêm đánh giá |
+| POST | `/api/auth/register` | Đăng ký |
+| POST | `/api/auth/login` | Đăng nhập |
+| GET | `/api/debug/books` | Debug - danh sách tất cả sách |
 
-```bash
-yarn run prisma:deploy && yarn run setup && yarn run build
-```
+---
 
-### Start the server
+## 🎨 Tính Năng
 
-```bash
-yarn start
-```
+- [x] Giao diện hiện đại (modern UI)
+- [x] Dark/Light mode
+- [x] Giỏ hàng (shopping cart)
+- [x] Chi tiết sách
+- [x] Đánh giá sách
+- [x] Đăng ký/Đăng nhập
+- [x] Responsive design
 
-### Open the browser
+---
 
-Open the browser and visit `http://<ip>:3000`.
+## 📄 License
 
-## 📖 Development Reference
+MIT License.
 
-### Prisma
+---
 
-[Prisma Deployment Guide](https://www.prisma.io/docs/guides/deployment/deploying-to-vercel)
+## 🙏 Cảm Ơn
 
-### Bookshop Schema
-
-[Bookshop Schema Design](https://docs.pingcap.com/tidbcloud/dev-guide-bookshop-schema-design)
+Dự án được xây dựng với sự hỗ trợ của [TiDB Cloud](https://tidbcloud.com/).
