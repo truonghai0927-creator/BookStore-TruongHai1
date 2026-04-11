@@ -21,7 +21,7 @@ export default function BookTypeMenu() {
     const func = async () => {
       setLoadingBookType(true);
       const res = await fetchBookTypes();
-      const { error, content } = res;
+      const { error, types } = res;
       if (error) {
         setLoadingBookType(false);
         enqueueSnackbar(`Error: Fetch Book Types`, {
@@ -29,7 +29,7 @@ export default function BookTypeMenu() {
         });
         return;
       }
-      setBookTypeList(content);
+      setBookTypeList(types);
       setLoadingBookType(false);
     };
     !bookTypeList.length && func();

@@ -9,6 +9,7 @@ import {
 import BookTypeMenu from 'components/v2/Layout/BookTypeMenu';
 import { shoppingCartState } from 'atoms';
 import { useRecoilState } from 'recoil';
+import { useAuth } from '../../../contexts/AuthContext';
 
 import { calcCartItemSum } from 'lib/utils';
 
@@ -18,6 +19,7 @@ export interface HeaderProps {
 
 export default function Header(props: HeaderProps) {
   const { hideMenu } = props;
+  const { user, logout, loading } = useAuth();
 
   const [shoppingCart, setShoppingCart] = useRecoilState(shoppingCartState);
 
@@ -53,12 +55,33 @@ export default function Header(props: HeaderProps) {
             </div>
           </NextLink>
 
-          {/* <button className='btn btn-ghost btn-circle'>
-              <div className='indicator'>
-                <UserIcon className='w-6 h-6' />
-                <span className='badge badge-xs badge-primary indicator-item'></span>
-              </div>
-            </button> */}
+          {!loading && (
+            <>
+              {user ? (
+                <div className='dropdown dropdown-end'>
+                  <label tabIndex={0} className='btn btn-ghost'>
+                    {user.name}
+                  </label>
+                  <ul tabIndex={0} className='dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2'>
+                    <li>
+                      <button onClick={logout} className='btn btn-ghost'>
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div className='flex gap-2'>
+                  <NextLink href='/login' className='btn btn-ghost btn-sm'>
+                    Login
+                  </NextLink>
+                  <NextLink href='/register' className='btn btn-primary btn-sm'>
+                    Register
+                  </NextLink>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </>

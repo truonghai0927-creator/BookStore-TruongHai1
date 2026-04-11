@@ -1,11 +1,4 @@
-import {
-  atom,
-  selector,
-  selectorFamily,
-  useRecoilState,
-  useRecoilValue,
-  waitForNone,
-} from "recoil";
+import { selector } from "recoil";
 import { bookDetailsIdState, homePageQueryState } from "atoms";
 import {
   fetchBookDetailsById,
@@ -18,7 +11,7 @@ export const homePageQuery = selector({
   get: async ({ get }) => {
     const { page, size, type, sort } = get(homePageQueryState);
     const response = await fetchBooks({ page, size, type, sort });
-    return response;
+    return { content: response.books, total: response.total };
   },
 });
 
@@ -26,10 +19,12 @@ export const bookInfoQuery = selector({
   key: "BookInfoQuery",
   get: async ({ get }) => {
     const bookID = get(bookDetailsIdState);
-    const response = await fetchBookDetailsById(bookID);
-    if (response.error) {
-      throw response.error;
+    
+    if (!bookID) {
+      return { content: null };
     }
+    
+    const response = await fetchBookDetailsById(bookID);
     return response;
   },
 });
@@ -39,12 +34,9 @@ export const bookRatingQuery = selector({
   get: async ({ get }) => {
     const bookID = get(bookDetailsIdState);
     if (!bookID) {
-      throw new Error('Required bookID');
+      return { content: { content: [], total: 0 } };
     }
     const response = await fetchBookRatingsById(bookID);
-    if (response.error) {
-      throw response.error;
-    }
     return response;
   },
 });

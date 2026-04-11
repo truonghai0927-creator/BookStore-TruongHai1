@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { useRecoilState, useRecoilValueLoadable } from 'recoil';
+import { StarIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { useSnackbar } from 'notistack';
 
 import { bookDetailsIdState } from 'atoms';
 import { bookRatingQuery } from 'selectors';
@@ -9,205 +11,163 @@ import HalfRating from 'components/v2/Rating/HalfRating';
 import BookRatingDeleteDialog from 'components/v2/BookDetails/BookRatingDeleteDialog';
 import BookAddRatingDialog from 'components/v2/BookDetails/BookAddRatingDialog';
 
+function StarPercentageBar({ leftText, value }: { leftText?: string; value: number }) {
+  const valueRound = Math.round(value);
+  return (
+    <div className="flex items-center gap-2">
+      {leftText && <span className="text-sm text-gray-500 w-12">{leftText}</span>}
+      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-yellow-400 rounded-full transition-all duration-300"
+          style={{ width: `${valueRound}%` }}
+        />
+      </div>
+      <span className="text-sm text-gray-500 w-8">{valueRound}%</span>
+    </div>
+  );
+}
+
+function ReviewCard({ review, onDelete }: { review: BookRatingsProps; onDelete: () => void }) {
+  return (
+    <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
+      <div className="flex items-start gap-4">
+        {/* Avatar */}
+        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-lg font-bold text-purple-600">
+            {review.user.nickname.substring(0, 1).toUpperCase()}
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          {/* Name and Rating */}
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h4 className="font-semibold text-gray-800">{review.user.nickname}</h4>
+              <p className="text-xs text-gray-500">User ID: {review.user.id}</p>
+            </div>
+            <HalfRating disabled rating={review.score} />
+          </div>
+
+          {/* Date */}
+          <p className="text-sm text-gray-500 mb-2">
+            {new Date(review.ratedAt).toLocaleDateString()}
+          </p>
+
+          {/* Delete Button */}
+          <button
+            className="text-sm text-red-500 hover:text-red-700 transition-colors"
+            onClick={onDelete}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BookReviewsSection() {
   const addRatingDialogRef = React.useRef<HTMLDialogElement>(null);
+  const [targetUserId, setTargetUserId] = React.useState<string | null>(null);
+  const deleteDialogRef = React.useRef<HTMLDialogElement>(null);
 
   const bookRatingLoadable = useRecoilValueLoadable(bookRatingQuery);
   const [bookDetailsId] = useRecoilState(bookDetailsIdState);
 
+  const handleDelete = (userId: string) => () => {
+    setTargetUserId(userId);
+    deleteDialogRef.current?.showModal();
+  };
+
   switch (bookRatingLoadable.state) {
     case 'hasValue':
-      const data = bookRatingLoadable.contents.content;
+      const data = bookRatingLoadable.contents.content.content as BookRatingsProps[];
+      
+      const num = data?.length || 0;
+      const sum = num > 0 ? data.reduce((prev: number, item: BookRatingsProps) => prev + item.score, 0) : 0;
+      const avg = num > 0 ? sum / num : 0;
+
       return (
-        <>
-          <div className='hero h-auto justify-start mt-6'>
-            <div className='hero-content items-start'>
-              <div className='max-w-md'>
-                <h2 className='text-3xl font-bold'>Customer Reviews</h2>
-                <p className='py-6'>
-                  <ReviewOverview content={data.content} />
-                </p>
-                <button
-                  className='btn btn-info'
-                  onClick={() => {
-                    addRatingDialogRef?.current?.showModal();
-                  }}
-                >
-                  Add Review
-                </button>
-              </div>
-              <div className='overflow-x-auto mt-16'>
-                {data?.content?.length > 0 && (
-                  <ReviewsTable content={data.content} bookId={bookDetailsId} />
-                )}
+        <div className="mt-8">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Customer Reviews</h2>
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              onClick={() => {
+                addRatingDialogRef?.current?.showModal();
+              }}
+            >
+              <PlusIcon className="w-5 h-5" />
+              Add Review
+            </button>
+          </div>
+
+          {/* Reviews Overview Card */}
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {/* Average Rating Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 text-center">
+              <div className="text-5xl font-bold text-purple-600 mb-2">{avg.toFixed(1)}</div>
+              <HalfRating disabled rating={avg} />
+              <p className="text-gray-500 mt-2">{num} global ratings</p>
+            </div>
+
+            {/* Rating Bars Card */}
+            <div className="md:col-span-2 bg-white rounded-xl shadow-md p-6">
+              <div className="space-y-2">
+                {[5, 4, 3, 2, 1].map((star) => (
+                  <StarPercentageBar
+                    key={star}
+                    leftText={`${star} Star`}
+                    value={
+                      num > 0
+                        ? (data.filter((i: BookRatingsProps) => i.score === star).length / num) * 100
+                        : 0
+                    }
+                  />
+                ))}
               </div>
             </div>
           </div>
+
+          {/* Reviews List */}
+          {data && data.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {data.map((item: BookRatingsProps) => (
+                <ReviewCard
+                  key={`${item.bookId}-${item.userId}`}
+                  review={item}
+                  onDelete={handleDelete(item.userId)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-md p-8 text-center">
+              <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+            </div>
+          )}
+
           <BookAddRatingDialog
             bookId={bookDetailsId}
             ref={addRatingDialogRef}
           />
-        </>
+
+          {targetUserId && (
+            <BookRatingDeleteDialog
+              bookId={bookDetailsId}
+              userId={targetUserId}
+              ref={deleteDialogRef}
+            />
+          )}
+        </div>
       );
     case 'loading':
       return (
-        <>
-          <div className='flex items-center justify-center mt-6'>
-            <span className='loading loading-bars loading-lg'></span>
-          </div>
-        </>
+        <div className="flex items-center justify-center py-20">
+          <span className="loading loading-bars loading-lg text-purple-600"></span>
+        </div>
       );
     case 'hasError':
-      // throw bookRatingLodable.contents;
       return <></>;
   }
 }
-
-const ReviewOverview = (props: { content: BookRatingsProps[] }) => {
-  const num = props.content.length;
-  const sum = props.content.reduce((prev, item) => {
-    return prev + item.score;
-  }, 0);
-  const avg = sum / num;
-  return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex items-center py-2'>
-        <HalfRating disabled rating={avg} />
-        <div className='ml-2'>{starLabels[roundHalf(avg)]}</div>
-      </div>
-      <div className='text-sm text-gray-500'>{`${num} global ratings`}</div>
-      <StarPercentageBar
-        leftText='5 Star'
-        value={
-          (props.content.filter((i) => i.score === 5).length / num) * 100 || 0
-        }
-      />
-      <StarPercentageBar
-        leftText='4 Star'
-        value={
-          (props.content.filter((i) => i.score === 4).length / num) * 100 || 0
-        }
-      />
-      <StarPercentageBar
-        leftText='3 Star'
-        value={
-          (props.content.filter((i) => i.score === 3).length / num) * 100 || 0
-        }
-      />
-      <StarPercentageBar
-        leftText='2 Star'
-        value={
-          (props.content.filter((i) => i.score === 2).length / num) * 100 || 0
-        }
-      />
-      <StarPercentageBar
-        leftText='1 Star'
-        value={
-          (props.content.filter((i) => i.score === 1).length / num) * 100 || 0
-        }
-      />
-      <StarPercentageBar
-        leftText='0 Star'
-        value={
-          (props.content.filter((i) => i.score === 0).length / num) * 100 || 0
-        }
-      />
-    </div>
-  );
-};
-
-const StarPercentageBar = (props: { leftText?: string; value: number }) => {
-  const { leftText, value = 0 } = props;
-  const valueRound = Math.round(value);
-  return (
-    <div className='flex items-center justify-between gap-2'>
-      {leftText && (
-        <span className='text-sm text-gray-500 w-32'>{leftText}</span>
-      )}
-      <progress
-        className='progress progress-info'
-        value={valueRound}
-        max='100'
-      ></progress>
-      <span className='text-sm text-gray-500 w-32'>{`${valueRound}%`}</span>
-    </div>
-  );
-};
-
-const ReviewsTable = (props: {
-  content: BookRatingsProps[];
-  bookId: string;
-}) => {
-  const { content, bookId } = props;
-  const [targetUserId, setTargetUserId] = React.useState<string | null>(null);
-
-  const deletaDialogRef = React.useRef<HTMLDialogElement>(null);
-
-  const handleDelete = (userId: string) => () => {
-    setTargetUserId(userId);
-    deletaDialogRef.current?.showModal();
-  };
-
-  return (
-    <>
-      <table className='table'>
-        {/* head */}
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Rating</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* row 1 */}
-          {content.map((item) => {
-            return (
-              <>
-                <tr key={item.userId}>
-                  <td>
-                    <div className='flex items-center space-x-3'>
-                      <div className='avatar placeholder'>
-                        <div className='bg-neutral-focus text-neutral-content mask mask-squircle w-12 h-12'>
-                          <span className='text-3xl'>
-                            {item.user.nickname.substring(0, 1)}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className='font-bold'>{item.user.nickname}</div>
-                        <div className='text-sm opacity-50'>
-                          User ID: {item.user.id}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <HalfRating disabled rating={item.score} />
-                  </td>
-                  <td>{`${new Date(item.ratedAt).toLocaleDateString()}`}</td>
-                  <th>
-                    <button
-                      className='btn btn-error btn-xs'
-                      onClick={handleDelete(item.userId)}
-                    >
-                      delete
-                    </button>
-                  </th>
-                </tr>
-              </>
-            );
-          })}
-        </tbody>
-      </table>
-      {targetUserId && (
-        <BookRatingDeleteDialog
-          bookId={bookId}
-          userId={targetUserId}
-          ref={deletaDialogRef}
-        />
-      )}
-    </>
-  );
-};

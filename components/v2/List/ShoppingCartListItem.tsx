@@ -1,7 +1,8 @@
 import * as React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useSnackbar } from 'notistack';
-import { PlusIcon, MinusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MinusIcon, TrashIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 
 import { useRecoilState } from 'recoil';
 import { shoppingCartState, currentUserIdState } from 'atoms';
@@ -28,6 +29,10 @@ export default function ShoppingCartListItem(props: shoppingCartItemProps) {
   const [currentUserId] = useRecoilState(currentUserIdState);
 
   const { enqueueSnackbar } = useSnackbar();
+
+  const authorName = authors.map(a => a.author.name).join(', ') || 'Unknown Author';
+  const formattedPrice = typeof price === 'string' ? Number(price).toFixed(2) : price;
+  const itemTotal = typeof price === 'string' ? (Number(price) * quantity).toFixed(2) : (price * quantity);
 
   function handleAddQty() {
     setShoppingCart((oldShoppingCart) => {
@@ -65,6 +70,7 @@ export default function ShoppingCartListItem(props: shoppingCartItemProps) {
     setShoppingCart((oldShoppingCart) => {
       return [...oldShoppingCart.filter((i) => i.id !== id)];
     });
+    enqueueSnackbar(`"${title}" removed from cart`, { variant: 'success' });
   }
 
   const handleBuyClick = async () => {
@@ -90,88 +96,98 @@ export default function ShoppingCartListItem(props: shoppingCartItemProps) {
   };
 
   return (
-    <>
-      <div className='card card-side bg-base-100 shadow-xl'>
-        <figure>
-          <Image
-            src={`https://picsum.photos/seed/${id}/200/300`}
-            alt={title}
-            width={150}
-            height={225}
-          />
-        </figure>
-        <div className='card-body'>
-          <div className='flex flex-col gap-1'>
-            <p>
-              <span className='text-lg font-bold pr-4'>Title:</span>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+      <div className="flex gap-4 p-4">
+        {/* Image */}
+        <Link href={`/book/${id}`} className="flex-shrink-0">
+          <div className="relative w-24 h-36 bg-gray-100 rounded-lg overflow-hidden">
+            <Image
+              src={`https://picsum.photos/seed/${id}/200/300`}
+              alt={title}
+              fill
+              className="object-cover"
+            />
+          </div>
+        </Link>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <Link href={`/book/${id}`}>
+            {/* Title */}
+            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 hover:text-blue-600 transition-colors">
               {title}
-            </p>
-            <p>
-              <span className='text-lg font-bold pr-4'>Type:</span>
-              {type.replaceAll(`_nbsp_`, ` `).replaceAll(`_amp_`, `&`)}
-            </p>
-            <p>
-              <span className='text-lg font-bold pr-4'>Publication date:</span>
-              {new Date(publishedAt).toLocaleDateString()}
-            </p>
-            <p>
-              <span className='text-lg font-bold pr-4'>Price:</span>
-              {`$ ${currencyFormat(price)}`}
-            </p>
-            <p>
-              <span className='text-lg font-bold pr-4'>In stock:</span>
-              {stock}
-            </p>
-            <div className='flex justify-between'>
-              <div className='join'>
-                <button
-                  className='btn btn-sm join-item'
-                  disabled={quantity >= stock}
-                  onClick={handleAddQty}
-                >
-                  <PlusIcon className='stroke-current shrink-0 w-6 h-6' />
-                </button>
-                <input
-                  className='input input-sm input-bordered join-item w-12'
-                  value={quantity}
-                  disabled
-                />
-                <button
-                  className='btn btn-sm join-item'
-                  disabled={quantity <= 1}
-                  onClick={handleRemoveQty}
-                >
-                  <MinusIcon className='stroke-current shrink-0 w-6 h-6' />
-                </button>
-              </div>
-              <div className='flex justify-end gap-4'>
-                <div className='font-bold'>
-                  <span className='pr-1'>
-                    {quantity === 1
-                      ? `(${quantity} item) $`
-                      : `(${quantity} items) $`}
-                  </span>
-                  {calcCartItemTotalPrice([props])}
-                </div>
-              </div>
-            </div>
-            <div className='flex justify-end gap-4'>
-              <button className='btn btn-sm btn-error' onClick={deleteItem}>
-                <TrashIcon className='stroke-current shrink-0 w-6 h-6' />
-                Delete
-              </button>
+            </h3>
+          </Link>
+
+          {/* Author */}
+          <p className="text-sm text-gray-500 mb-2">
+            {authorName}
+          </p>
+
+          {/* Price */}
+          <p className="text-lg font-bold text-blue-600 mb-3">
+            ${formattedPrice}
+          </p>
+
+          {/* Quantity Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <button
-                className='btn btn-sm btn-info'
-                onClick={handleBuyClick}
-                disabled={loading}
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                disabled={quantity <= 1}
+                onClick={handleRemoveQty}
               >
-                {loading && <span className='loading loading-spinner' />}
-                Proceed to Purchase
+                <MinusIcon className="w-4 h-4 text-gray-600" />
               </button>
+              <span className="w-10 text-center font-medium text-gray-800">
+                {quantity}
+              </span>
+              <button
+                className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                disabled={quantity >= stock}
+                onClick={handleAddQty}
+              >
+                <PlusIcon className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Item Total */}
+            <div className="text-right">
+              <p className="text-lg font-bold text-gray-800">
+                ${itemTotal}
+              </p>
             </div>
           </div>
         </div>
+
+        {/* Delete Button */}
+        <button
+          onClick={deleteItem}
+          className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors"
+          title="Remove item"
+        >
+          <TrashIcon className="w-5 h-5" />
+        </button>
       </div>
-    </>
+
+      {/* Actions Footer */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-100">
+        <p className="text-sm text-gray-500">
+          {quantity === 1 ? `(${quantity} item)` : `(${quantity} items)`}
+        </p>
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleBuyClick}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="loading loading-spinner loading-xs" />
+          ) : (
+            <ShoppingCartIcon className="w-4 h-4" />
+          )}
+          <span className="text-sm font-medium">Buy Now</span>
+        </button>
+      </div>
+    </div>
   );
 }
