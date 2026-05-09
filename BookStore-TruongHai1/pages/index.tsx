@@ -142,7 +142,7 @@ export default function HomePage() {
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <Navbar cartItemCount={cartItemCount} />
         
-        <main className="flex-grow">
+        <main className="flex-grow pt-16">
           <Hero />
           
           {/* Books Section */}

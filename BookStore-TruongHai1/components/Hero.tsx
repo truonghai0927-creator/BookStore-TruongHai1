@@ -3,7 +3,7 @@ import { ArrowRightIcon } from '@heroicons/react/24/solid';
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 overflow-hidden pt-8 md:pt-16">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -11,7 +11,7 @@ export default function Hero() {
         }} />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Text Content */}
           <div className="text-center md:text-left">
