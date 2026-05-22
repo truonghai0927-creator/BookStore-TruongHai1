@@ -1,225 +1,135 @@
-# 📚 Bookstore - Dự Án Sách Trực Tuyến
+﻿# 📚 Bookstore — Cửa Hàng Sách Trực Tuyến
 
-Ứng dụng cửa hàng sách trực tuyến được xây dựng với Next.js, Prisma và TiDB Cloud.
-
-## 🚀 Demo
-
-**Truy cập demo:** https://tidb-prisma-vercel-demo.vercel.app/
+Website bán sách trực tuyến với giao diện hiện đại, hỗ trợ đăng nhập/đăng ký, giỏ hàng, thanh toán và quản lý đánh giá sách.
 
 ---
 
-## 🖼️ Wireframe & Giao Diện
+## 👥 Danh sách thành viên nhóm
 
-### 1. Trang Chủ (Homepage)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  [Logo] Bookstore              🔍 Tìm kiếm  👤 Đăng nhập  🛒 Giỏ  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│    ╔═══════════════════════════════════════════════════════╗    │
-│    ║    CHÀO MỪNG ĐẾN VỚI BOOKSTORE           ║    │
-│    ║    Khám phá ngàn đầu sách hay nhất          ║    │
-│    ║                                           ║    │
-│    ║    [Browse Books]  [Đăng ký ngay]         ║    │
-│    ╚═══════════════════════════════════════════════╝    │
-│                                                             │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │  📖 SÁCH NỔI BẬT                                  │  │
-│  ├─────────────────────────────────────────────────┤  │
-│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐              │  │
-│  │  │ 📕  │ │ 📘  │ │ 📗  │ │ 📙  │              │  │
-│  │  │Gatsby│ │ 1984 │ │Alchem│ │Hobbit│              │  │
-│  │  │$12.9│ │$14.9 │ │$10.9│ │$15.9│              │  │
-│  │  │ ⭐4.5│ │ ⭐4.8│ │ ⭐4.5│ │ ⭐4.9│              │  │
-│  │  └──────┘ └──────┘ └──────┘ └──────┘              │  │
-│  └─────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │  VỀ CHÚNG TÔI                                        │  │
-│  │  ...                                                 │  │
-│  └─────────────────────────────────────────────────┘  │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│  © 2024 Bookstore - Bản quyền                          │
-└──────────────────────────────────────────────��──────────────┘
-```
-
-### 2. Chi Tiết Sách (Book Detail)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🏠 Trang chủ / Sách / [Tên sách]                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────┬────────────────────────────────┐│
-│  │                     │  [Loại: Novel]                    ││
-│  │   ┌─────────────┐    │                                ││
-│  │   │           │    │  Tên sách: [Title]             ││
-│  │   │   📕      │    │  Tác giả: [Author Name]         ││
-│  │   │  COVER    │    │  ⭐⭐⭐⭐⭐ (4.5) - 12 đánh giá ││
-│  │   │           │    │  Ngày: DD/MM/YYYY              ││
-│  │   │           │    │  Giá: $XX.XX                   ││
-│  │   └─────────────┘    │  Còn XX trong kho               ││
-│  │                     │                                ││
-│  │                     │  [🛒 Thêm vào giỏ]             ││
-│  └─────────────────────┴────────────────────────────────┘│
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  ĐÁNH GIÁ KHÁCH HÀNG (XX đánh giá)                    │  │
-│  │  ┌──────────────────────────────────────────────┐  │  │
-│  │  │ 👤 User1    ⭐⭐⭐⭐⭐ - 01/01/2024          │  │  │
-│  │  │ Review text here...                        │  │  │
-│  │  └──────────────────────────────────────────────┘  │  │
-│  └─────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 3. Giỏ Hàng (Cart)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  ← Tiếp tục mua sắm           GIỎ HÀNG                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  ┌────┐  Tên sách                    [- 1 +]  $XX.XX  │  │
-│  │  │📕 │  Tác giả                       [🗑️]        │  │
-│  │  └────┘                                              │  │
-│  └──────────────��──────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  ┌────┐  Tên sách                    [- 2 +]  $XX.XX  │  │
-│  │  │📕 │  Tác giả                       [🗑️]        │  │
-│  │  └────┘                                              │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  Tổng cộng (X sản phẩm):          $XXX.XX           │  │
-│  │                                               [Thanh toán]│
-│  └─────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 4. Đăng Nhập / Đăng Ký
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│              ┌───────────────────────┐                      │
-│              │      ĐĂNG NHẬP        │                      │
-│              ├───────────────────────┤                      │
-│              │  📧 Email            │                      │
-│              │  ┌─────────────────┐  │                      │
-│              │  │ email@test.com │  │                      │
-│              │  └─────────────────┘  │                      │
-│              │  🔑 Mật khẩu          │                      │
-│              │  ┌─────────────────┐  │                      │
-│              │  │ ********      │  │                      │
-│              │  └─────────────────┘  │                      │
-│              │                       │                      │
-│              │   [ĐĂNG NHẬP]          │                      │
-│              │                       │                      │
-│              │  Chưa có tài khoản?   │                      │
-│              │  [Đăng ký ngay]       │                      │
-│              └───────────────────────┘                      │
-└─────────────────────────────────────────────────────────────┘
-```
+| STT | Họ và tên |
+|-----|-----------|
+| 1 | Hoàng Trường Hải |
+| 2 | Đỗ Đình Duy |
+| 3 | Nguyễn Văn Lễ |
 
 ---
 
-## 🛠️ Công Nghệ
+## 🎯 Chức năng website
+
+- **Trang chủ** — Hiển thị danh sách sách nổi bật, tìm kiếm, lọc theo thể loại, sắp xếp theo giá/ngày xuất bản.
+- **Chi tiết sách** — Xem thông tin sách, tác giả, giá, tồn kho và đánh giá của khách hàng.
+- **Giỏ hàng** — Thêm/xóa sách, tăng/giảm số lượng, tính tổng tiền tự động.
+- **Đăng ký / Đăng nhập** — Xác thực người dùng bằng JWT.
+- **Checkout** — Đặt hàng, nhập thông tin giao hàng, xác nhận đơn hàng.
+- **Trang đặt hàng thành công** — Hiển thị thông tin đơn hàng sau khi thanh toán.
+- **Dark / Light mode** — Đổi giao diện sáng/tối.
+- **Admin API** — Quản lý sách, đơn hàng, thống kê.
+
+---
+
+## 🛠️ Công nghệ sử dụng
 
 | Công nghệ | Mô tả |
 |-----------|-------|
-| **Next.js 13** | Framework React hiện đại |
-| **Prisma** | ORM cho database |
-| **TiDB Cloud** | Database MySQL cloud |
-| **Tailwind CSS** | Styling hiện đại |
-| **Recoil** | State management |
-| **JWT** | Authentication |
+| **Next.js 13** | Framework React (SSR / SSG / API Routes) |
+| **TypeScript** | Ngôn ngữ lập trình có kiểu tĩnh |
+| **Tailwind CSS** | Framework CSS styling |
+| **Prisma ORM** | ORM kết nối database |
+| **TiDB Cloud** | Database MySQL trên cloud |
+| **Recoil** | Quản lý state phía client |
+| **JWT + bcrypt** | Xác thực và mã hóa mật khẩu |
+| **notistack** | Hiển thị thông báo (toast) |
+| **Axios** | Gọi API |
 
 ---
 
-## 📦 Cài Đặt
+## 📦 Hướng dẫn cài đặt và chạy dự án trên localhost
+
+### 1. Yêu cầu môi trường
+
+- Node.js >= 18
+- MySQL / TiDB Cloud
+
+### 2. Clone dự án
 
 ```bash
-# Clone dự án
 git clone https://github.com/truonghai0927-creator/BookStore-TruongHai1.git
 cd BookStore-TruongHai1
-
-# Cài đặt dependencies
-yarn install
-
-# Chạy migration
-npx prisma migrate dev
-
-# Chạy development server
-yarn dev
 ```
+
+### 3. Cài đặt dependencies
+
+```bash
+npm install
+```
+
+### 4. Tạo file `.env`
+
+Tạo file `.env` ở thư mục gốc với nội dung:
+
+```env
+DATABASE_URL="mysql://<USER>:<PASSWORD>@<HOST>:4000/bookshop?sslaccept=strict"
+```
+
+### 5. Tạo Prisma Client và đồng bộ schema lên database
+
+```bash
+npx prisma generate
+npx prisma db push --force-reset
+```
+
+### 6. Seed dữ liệu mẫu vào database
+
+```bash
+node setup.mjs
+```
+
+### 7. Chạy development server
+
+```bash
+npm run dev
+```
+
+Mở trình duyệt truy cập: [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🌳 Cấu Trúc Dự Án
+## 🗂️ Cấu trúc thư mục
 
 ```
-BookStore/
+BookStore-TruongHai1/
 ├── components/
-│   ├── BookCard.tsx       # Thẻ sách
-│   ├── BookList.tsx      # Danh sách sách
-│   ├── Footer.tsx       # Chân trang
-│   ├── Hero.tsx         # Banner chính
-│   ├── Navbar.tsx      # Thanh điều hướng
-│   └── ThemeToggle.tsx # Chuyển đổi dark/light
-├── contexts/            # React Context
-├── lib/
-│   ├── auth.ts         # Auth utilities
-│   ├── http.ts        # API functions
-│   └── prisma.ts     # Prisma client
+│   ├── BookCard.tsx
+│   ├── BookList.tsx
+│   ├── Footer.tsx
+│   ├── Header.tsx
+│   ├── Hero.tsx
+│   ├── Navbar.tsx
+│   ├── ThemeToggle.tsx
+│   └── v2/
 ├── pages/
-│   ├── api/          # API routes
-│   ├── book/[id].tsx # Chi tiết sách
-│   ├── cart.tsx      # Giỏ hàng
-│   ├── index.tsx     # Trang chủ
-│   ├── login.tsx     # Đăng nhập
-│   └── register.tsx  # Đăng ký
-└── prisma/
-    └── schema.prisma # Database schema
+│   ├── api/
+│   │   ├── auth/          # login, register
+│   │   ├── books/         # list, detail, ratings
+│   │   ├── debug/
+│   │   ├── orders/        # create, list
+│   │   └── stats/
+│   ├── book/[id].tsx      # Chi tiết sách
+│   ├── cart.tsx           # Giỏ hàng
+│   ├── checkout.tsx       # Thanh toán
+│   ├── index.tsx          # Trang chủ
+│   ├── login.tsx          # Đăng nhập
+│   ├── register.tsx       # Đăng ký
+│   └── success.tsx        # Đặt hàng thành công
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── lib/                   # prisma.ts, auth.ts, http.ts, utils.ts
+├── atoms/                 # Recoil state
+├── selectors/             # Recoil selectors
+├── contexts/              # AuthContext, ThemeProvider
+├── const/                 # Types & constants
+├── scripts/               # setup.mjs (seed data)
+├── styles/                # globals.css
+└── README.md
 ```
-
----
-
-## 📝 API Endpoints
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/books` | Lấy danh sách sách |
-| GET | `/api/books/:id` | Lấy chi tiết sách |
-| GET | `/api/books/:id/ratings` | Lấy đánh giá |
-| POST | `/api/books/:id/ratings` | Thêm đánh giá |
-| POST | `/api/auth/register` | Đăng ký |
-| POST | `/api/auth/login` | Đăng nhập |
-| GET | `/api/debug/books` | Debug - danh sách tất cả sách |
-
----
-
-## 🎨 Tính Năng
-
-- [x] Giao diện hiện đại (modern UI)
-- [x] Dark/Light mode
-- [x] Giỏ hàng (shopping cart)
-- [x] Chi tiết sách
-- [x] Đánh giá sách
-- [x] Đăng ký/Đăng nhập
-- [x] Responsive design
-
----
-
-## 📄 License
-
-MIT License.
-
----
-
-## 🙏 Cảm Ơn
-
-Dự án được xây dựng với sự hỗ trợ của [TiDB Cloud](https://tidbcloud.com/).
