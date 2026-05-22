@@ -1,128 +1,330 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
+import AuthInput from '../components/AuthInput';
+import {
+  UserCircleIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const { register } = useAuth();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const validate = () => {
+    const next: Record<string, string> = {};
+
+    if (!name.trim()) {
+      next.name = 'Name is required';
+    }
+    if (!email.trim()) {
+      next.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      next.email = 'Please enter a valid email';
+    }
+    if (!password) {
+      next.password = 'Password is required';
+    } else if (password.length < 6) {
+      next.password = 'At least 6 characters';
+    }
+    if (password !== confirmPassword) {
+      next.confirmPassword = 'Passwords do not match';
+    }
+
+    return next;
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched((p) => ({ ...p, [field]: true }));
+    setErrors(validate());
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setFormError('');
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    setTouched({ name: true, email: true, password: true, confirmPassword: true });
+    const v = validate();
+    setErrors(v);
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (Object.keys(v).length > 0) {
+      formRef.current?.classList.add('shake');
+      setTimeout(() => formRef.current?.classList.remove('shake'), 400);
       return;
     }
 
     setLoading(true);
-
     try {
-      await register(name, email, password);
+      await register(name.trim(), email.trim(), password);
       router.push('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setFormError(err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="card w-96 bg-white shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title text-2xl font-bold text-center mb-4">Register</h2>
-          
-          {error && (
-            <div className="alert alert-error mb-4">
-              <span>{error}</span>
-            </div>
-          )}
+    <div className="relative min-h-screen overflow-hidden bg-auth-gradient dark:bg-[#0F172A]">
+      {/* ── Ambient orbs ── */}
+      <div
+        className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full opacity-30"
+        style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', animation: 'float 8s ease-in-out infinite' }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full opacity-25"
+        style={{ background: 'radial-gradient(circle, #6366f1 0%, transparent 70%)', animation: 'float 10s ease-in-out infinite reverse' }}
+        aria-hidden="true"
+      />
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text">Name</span>
-              </label>
-              <input
-                type="text"
-                placeholder="John Doe"
-                className="input input-bordered"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text">Email</span>
-              </label>
-              <input
-                type="email"
-                placeholder="your@email.com"
-                className="input input-bordered"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+      {/* ── Main layout ── */}
+      <div className="relative z-10 flex min-h-screen items-stretch">
+        {/* ── Left decorative panel ── */}
+        <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 flex-col justify-between bg-gradient-to-br from-violet-600 via-violet-500 to-indigo-600 p-12 xl:p-16">
+          {/* Logo + wordmark */}
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+                <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-white">
+                Bookstore
+              </span>
             </div>
 
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="input input-bordered"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-control mb-6">
-              <label className="label">
-                <span className="label-text">Confirm Password</span>
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="input input-bordered"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary w-full"
-              disabled={loading}
+            {/* Decorative book stack */}
+            <div
+              className="mt-auto mb-auto book-setup"
+              aria-hidden="true"
+              style={{
+                filter: 'drop-shadow(0 20px 40px rgba(0,0,0,.3))',
+              }}
             >
-              {loading ? 'Loading...' : 'Register'}
-            </button>
-          </form>
+              {['#6366f1', '#7c3aed', '#a78bfa'].map((color, i) => (
+                <div
+                  key={color}
+                  className="book-cover flex items-center justify-center"
+                  style={{
+                    background: `linear-gradient(135deg, ${color} 0%, ${color}aa 100%)`,
+                    width: `${52 + i * 6}px`,
+                    height: `${72 + i * 8}px`,
+                    borderRadius: `${6 + i * 2}px ${12}px ${12}px ${6 + i * 2}px`,
+                    marginLeft: i > 0 ? '-12px' : '0',
+                    opacity: 0.78 + i * 0.08,
+                    transform: `rotateY(${i * -5}deg) rotateZ(${i === 0 ? -2 : i === 1 ? 1 : 2}deg)`,
+                    zIndex: 3 - i,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
 
-          <p className="text-center mt-4">
-            Already have an account?{' '}
-            <Link href="/login" className="link link-primary">
-              Login
-            </Link>
-          </p>
+          {/* Bottom quote */}
+          <div className="mt-16 xl:mt-0">
+            <blockquote className="text-2xl xl:text-3xl font-semibold leading-relaxed text-white/90">
+              &ldquo;A reader lives a thousand lives before he dies.&rdquo;
+            </blockquote>
+            <p className="mt-3 text-sm font-medium text-white/60">— George R.R. Martin</p>
+          </div>
+        </div>
+
+        {/* ── Right form panel ── */}
+        <div className="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+          <div className="glass-card w-full max-w-md overflow-hidden rounded-3xl p-8 sm:p-10 shadow-auth-card">
+            {/* Mobile logo */}
+            <div className="mb-8 flex items-center gap-3 lg:hidden">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">Bookstore</span>
+            </div>
+
+            {/* Headings */}
+            <div className="mb-8">
+              <h1 className="text-2xl sm:text-[28px] font-bold text-gray-900 dark:text-white leading-tight">
+                Welcome to{' '}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-600">
+                  Bookstore
+                </span>
+              </h1>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Create your account to get started
+              </p>
+            </div>
+
+            {/* Global form error */}
+            {formError && (
+              <div className="mb-5 flex items-center gap-2.5 rounded-xl bg-red-50 p-3 text-xs text-red-600 dark:bg-red-950/40 dark:text-red-400 ring-1 ring-red-100 dark:ring-red-900/40">
+                <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                </svg>
+                <span>{formError}</span>
+              </div>
+            )}
+
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {/* Name */}
+              <AuthInput
+                label="Full Name"
+                name="name"
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (touched.name) setErrors(validate());
+                }}
+                onBlur={() => handleBlur('name')}
+                error={touched.name ? errors.name : undefined}
+                icon={<UserCircleIcon className="h-5 w-5" />}
+                autoComplete="name"
+              />
+
+              {/* Email */}
+              <AuthInput
+                label="Email Address"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (touched.email) setErrors(validate());
+                }}
+                onBlur={() => handleBlur('email')}
+                error={touched.email ? errors.email : undefined}
+                icon={<EnvelopeIcon className="h-5 w-5" />}
+                autoComplete="email"
+              />
+
+              {/* Password */}
+              <AuthInput
+                label="Password"
+                name="password"
+                type="password"
+                showPasswordToggle
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (touched.password) setErrors(validate());
+                }}
+                onBlur={() => handleBlur('password')}
+                error={touched.password ? errors.password : undefined}
+                icon={<LockClosedIcon className="h-5 w-5" />}
+                autoComplete="new-password"
+              />
+
+              {/* Confirm Password */}
+              <AuthInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                showPasswordToggle
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (touched.confirmPassword) setErrors(validate());
+                }}
+                onBlur={() => handleBlur('confirmPassword')}
+                error={touched.confirmPassword ? errors.confirmPassword : undefined}
+                icon={<LockClosedIcon className="h-5 w-5" />}
+                autoComplete="new-password"
+              />
+
+              {/* Terms */}
+              <div className="flex items-start gap-2.5 pt-1">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  required
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 dark:border-gray-600 dark:bg-gray-700"
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-xs leading-relaxed text-gray-500 dark:text-gray-400"
+                >
+                  I agree to BookStore&apos;s{' '}
+                  <Link href="/terms" className="text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-violet-600 hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="
+                  mt-2 flex h-12 w-full items-center justify-center gap-2
+                  rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600
+                  px-6 py-3.5 text-sm font-semibold
+                  text-white shadow-auth-button
+                  transition-all duration-200 ease-out
+                  hover:shadow-auth-button-hover hover:brightness-110
+                  active:scale-[0.985]
+                  disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 disabled:hover:scale-100
+                "
+              >
+                {loading ? (
+                  <>
+                    <div className="spinner" style={{ borderColor: 'rgba(255,255,255,0.25)', borderTopColor: 'white' }} />
+                    <span>Creating account…</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircleIcon className="h-5 w-5" />
+                    <span>Create Account</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="my-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              <span className="text-[11px] font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                or
+              </span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            </div>
+
+            {/* Login link */}
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="text-violet-600 transition-colors hover:text-violet-500 dark:text-violet-400 dark:hover:text-violet-300"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

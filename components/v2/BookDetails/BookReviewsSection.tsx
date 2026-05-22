@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useRecoilState, useRecoilValueLoadable } from 'recoil';
-import { StarIcon, PlusIcon } from '@heroicons/react/24/solid';
-import { useSnackbar } from 'notistack';
+import { PlusIcon } from '@heroicons/react/24/solid';
 
 import { bookDetailsIdState } from 'atoms';
 import { bookRatingQuery } from 'selectors';
@@ -11,6 +10,21 @@ import HalfRating from 'components/v2/Rating/HalfRating';
 import BookRatingDeleteDialog from 'components/v2/BookDetails/BookRatingDeleteDialog';
 import BookAddRatingDialog from 'components/v2/BookDetails/BookAddRatingDialog';
 
+// ─── Helper: safe avatar letter ────────────────────────────────────────────────
+function getAvatarLetter(review: BookRatingsProps): string {
+  const nickname = review.user?.nickname;
+  if (!nickname) return 'U';
+  const first = nickname.trim().charAt(0);
+  return first ? first.toUpperCase() : 'U';
+}
+
+// ─── Helper: safe display name ────────────────────────────────────────────────
+function getDisplayName(review: BookRatingsProps): string {
+  const nickname = review.user?.nickname;
+  return nickname && nickname.trim() ? nickname.trim() : 'Unknown User';
+}
+
+// ─── Utility bar ──────────────────────────────────────────────────────────────
 function StarPercentageBar({ leftText, value }: { leftText?: string; value: number }) {
   const valueRound = Math.round(value);
   return (
@@ -27,14 +41,24 @@ function StarPercentageBar({ leftText, value }: { leftText?: string; value: numb
   );
 }
 
-function ReviewCard({ review, onDelete }: { review: BookRatingsProps; onDelete: () => void }) {
+// ─── Safe Review Card ─────────────────────────────────────────────────────────
+interface ReviewCardProps {
+  review: BookRatingsProps;
+  onDelete: () => void;
+}
+
+function ReviewCard({ review, onDelete }: ReviewCardProps) {
+  const displayName = getDisplayName(review);
+  const avatarLetter = getAvatarLetter(review);
+  const initialChar = avatarLetter;
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-lg font-bold text-purple-600">
-            {review.user.nickname.substring(0, 1).toUpperCase()}
+        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
+            {initialChar}
           </span>
         </div>
 
@@ -42,20 +66,26 @@ function ReviewCard({ review, onDelete }: { review: BookRatingsProps; onDelete: 
           {/* Name and Rating */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h4 className="font-semibold text-gray-800">{review.user.nickname}</h4>
-              <p className="text-xs text-gray-500">User ID: {review.user.id}</p>
+              {/* @ts-expect-error: user may be null — guarded by getDisplayName */}
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
+                {displayName}
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {/* @ts-expect-error: user may be null */}
+                User ID: {String(review.user?.id ?? review.userId)}
+              </p>
             </div>
             <HalfRating disabled rating={review.score} />
           </div>
 
           {/* Date */}
-          <p className="text-sm text-gray-500 mb-2">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
             {new Date(review.ratedAt).toLocaleDateString()}
           </p>
 
           {/* Delete Button */}
           <button
-            className="text-sm text-red-500 hover:text-red-700 transition-colors"
+            className="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
             onClick={onDelete}
           >
             Delete
@@ -66,6 +96,7 @@ function ReviewCard({ review, onDelete }: { review: BookRatingsProps; onDelete: 
   );
 }
 
+// ─── Main Section ─────────────────────────────────────────────────────────────
 export default function BookReviewsSection() {
   const addRatingDialogRef = React.useRef<HTMLDialogElement>(null);
   const [targetUserId, setTargetUserId] = React.useState<string | null>(null);
@@ -81,19 +112,20 @@ export default function BookReviewsSection() {
 
   switch (bookRatingLoadable.state) {
     case 'hasValue':
-      const data = bookRatingLoadable.contents.content.content as BookRatingsProps[];
-      
-      const num = data?.length || 0;
-      const sum = num > 0 ? data.reduce((prev: number, item: BookRatingsProps) => prev + item.score, 0) : 0;
+      const data = bookRatingLoadable.contents.content.content as BookRatingsProps[] | undefined;
+
+      const reviews = data ?? [];
+      const num = reviews.length;
+      const sum = num > 0 ? reviews.reduce((prev: number, item: BookRatingsProps) => prev + item.score, 0) : 0;
       const avg = num > 0 ? sum / num : 0;
 
       return (
         <div className="mt-8">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Customer Reviews</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Customer Reviews</h2>
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 dark:hover:bg-purple-500 transition-colors"
               onClick={() => {
                 addRatingDialogRef?.current?.showModal();
               }}
@@ -106,14 +138,14 @@ export default function BookReviewsSection() {
           {/* Reviews Overview Card */}
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {/* Average Rating Card */}
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
-              <div className="text-5xl font-bold text-purple-600 mb-2">{avg.toFixed(1)}</div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 text-center">
+              <div className="text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">{avg.toFixed(1)}</div>
               <HalfRating disabled rating={avg} />
-              <p className="text-gray-500 mt-2">{num} global ratings</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">{num} global ratings</p>
             </div>
 
             {/* Rating Bars Card */}
-            <div className="md:col-span-2 bg-white rounded-xl shadow-md p-6">
+            <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((star) => (
                   <StarPercentageBar
@@ -121,7 +153,7 @@ export default function BookReviewsSection() {
                     leftText={`${star} Star`}
                     value={
                       num > 0
-                        ? (data.filter((i: BookRatingsProps) => i.score === star).length / num) * 100
+                        ? (reviews.filter((i: BookRatingsProps) => i.score === star).length / num) * 100
                         : 0
                     }
                   />
@@ -131,19 +163,19 @@ export default function BookReviewsSection() {
           </div>
 
           {/* Reviews List */}
-          {data && data.length > 0 ? (
+          {reviews.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
-              {data.map((item: BookRatingsProps) => (
+              {reviews.map((item: BookRatingsProps) => (
                 <ReviewCard
-                  key={`${item.bookId}-${item.userId}`}
+                  key={`${item.bookId}-${item.userId}-${item.ratedAt}`}
                   review={item}
                   onDelete={handleDelete(item.userId)}
                 />
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-8 text-center">
-              <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+              <p className="text-gray-500 dark:text-gray-400">No reviews yet. Be the first to review!</p>
             </div>
           )}
 
@@ -161,13 +193,19 @@ export default function BookReviewsSection() {
           )}
         </div>
       );
+
     case 'loading':
       return (
         <div className="flex items-center justify-center py-20">
           <span className="loading loading-bars loading-lg text-purple-600"></span>
         </div>
       );
+
     case 'hasError':
-      return <></>;
+      return (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-gray-500 dark:text-gray-400">Failed to load reviews.</p>
+        </div>
+      );
   }
 }

@@ -31,8 +31,8 @@ export interface BookRatingsProps {
   ratedAt: string;
   user: {
     id: string;
-    nickname: string;
-  };
+    nickname: string | null;
+  } | null;
 }
 
 export const starLabels: { [index: string]: string } = {

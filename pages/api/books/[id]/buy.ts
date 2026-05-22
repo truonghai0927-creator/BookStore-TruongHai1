@@ -1,131 +1,175 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 import prisma from '../../../../lib/prisma'
 
+interface BuyResult {
+  status: number;
+  message: string;
+  data: {
+    userId: number;
+    bookId: number;
+    bookTitle: string;
+    cost: number;
+    remaining: number;
+    orderId: number;
+  };
+}
+
 const buyBookHandler = async (
   req: NextApiRequest,
-  res: NextApiResponse<any>
+  res: NextApiResponse<BuyResult['data'] | { message: string }>
 ) => {
   if (req.method === 'POST') {
     try {
         const result = await buyBook(req);
-        res.status(result.status).json({
-            message: result.message,
-            data: result.data
-        });
+        res.status(result.status).json(result.data);
     } catch (err:any) {
-      console.error(err)
-      res.status(500).json({
-        message: err.message
-      })
+      console.error(err);
+      res.status(500).json({ message: err.message });
     }
   } else {
-    res.status(401).json({
-      message: `HTTP method ${req.method} is not supported.`
-    });
+    res.status(405).json({ message: `HTTP method ${req.method} is not supported.` });
   }
 }
 
-async function buyBook(req:NextApiRequest): Promise<any> {
-    // Get bookID;
+// ── Minimal inline JWT helpers (avoids dynamic import through [id] route which TS
+//    cannot resolve with bad bracket-glob). Full logic is identical to lib/auth.ts.
+const JWT_ALGO = 'HS256';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+function verifyToken(token: string): { id: number; email: string; name: string } | null {
+  try {
+    const payload = require('jsonwebtoken').verify(token, JWT_SECRET) as {
+      user: { id: number; email: string; name: string },
+    };
+    return payload.user;
+  } catch {
+    return null;
+  }
+}
+
+async function buyBook(req: NextApiRequest): Promise<BuyResult> {
+    // ── Validate query params ──
     if (typeof req.query.id !== 'string' && typeof req.query.id !== 'number') {
         throw new Error('Invalid parameter `id`.');
     }
     const bookId = Number(req.query.id);
 
-    // Get quality;
     if (typeof req.query.quality !== 'string' && typeof req.query.quality !== 'number') {
-        throw new Error('Invalid parameter `num`.');
+        throw new Error('Invalid parameter `quality`.');
     }
     const quality = Math.floor(Number(req.query.quality));
     if (quality <= 0) {
-        throw new Error('Parameter `quality` must greater than zero.');
+        throw new Error('Parameter `quality` must be greater than zero.');
     }
 
-    // TODO: get user ID from context.
-    if (typeof req.query.userId !== 'string' && typeof req.query.userId !== 'number') {
-        throw new Error('Invalid parameter `userId`.');
+    // ── Get authenticated user from JWT header ──
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new Error('You must be logged in to buy a book.');
     }
-    const userId = Number(req.query.userId);
+    const token = authHeader.replace('Bearer ', '');
+    const userPayload = verifyToken(token);
+    if (!userPayload) {
+        throw new Error('Invalid or expired token. Please log in again.');
+    }
+    const userId = userPayload.id;
 
     try {
         const result = await prisma.$transaction(async tx => {
-            // Found the book that the user want to purchase.
-            const book = await tx.book.findFirst({
-                where: {
-                    id: bookId
-                },    
+            // 1. Find the book
+            const book = await tx.book.findUnique({
+                where: { id: bookId },
             });
-
-            if (book === undefined || book === null) {
-                throw new Error(`Can not found the book <${bookId}> that you want to buy.`);
+            if (!book) {
+                throw new Error(`Book <id: ${bookId}> not found.`);
             }
 
-            // Check if has enough books for the user purchase.
-            const stock = book.stock;
-            if (quality > stock) {
-                throw new Error(`Didn't have enough stock of book <${bookId}> for your purchase.`);
+            // 2. Check stock
+            if (quality > book.stock) {
+                throw new Error(`Only ${book.stock} copies left of "${book.title}".`);
             }
 
-            // Cost the user balance to buy the book.
-            const cost = book?.price.mul(quality).toNumber();
+            // 3. Compute cost (Decimal × int → Decimal, then to JS number)
+            const cost = parseFloat(book.price.toFixed(2)) * quality;
+
+            // 4. Deduct user balance
             const purchaser = await tx.user.update({
                 data: {
-                    balance: {
-                        decrement: cost,
-                    },
+                    balance: { decrement: cost },
                 },
-                where: {
-                    id: userId,
-                },
+                where: { id: userId },
             });
-            if (purchaser.balance.lt(0)) {
-                throw new Error(`User <${userId}> doesn't have enough money to buy book <${bookId}>, which need to cost ${cost}.`)
+            if (purchaser.balance.toNumber() < 0) {
+                throw new Error(
+                    `Insufficient balance. You need ${cost} but have ${
+                        parseFloat(purchaser.balance.toFixed(2)) + cost
+                    }.`
+                );
             }
 
-            // Update the book stock.
-            const newBook = await tx.book.update({
-                data: {
-                    stock: {
-                        decrement: 1,
-                    }
-                },
-                where: {
-                    id: bookId
-                }
+            // 5. Update stock
+            await tx.book.update({
+                data: { stock: { decrement: quality } },
+                where: { id: bookId },
             });
-            if (newBook.stock < 0) {
-                throw new Error(`The book ${newBook.stock} is out of stock.`);
-            }
 
-            // Generate a new order to record.
+            // 6. Create Order + OrderItem
+            //    Use nested relation writes so the "checked" OrderCreateInput type works.
+            //    `user: { connect }` satisfies OrderCreateInput ∋ user | items
+            //    `items: { create }` writes the OrderItem row via the Order→items relation.
             const order = await tx.order.create({
                 data: {
-                    userId: userId,
-                    bookId: bookId,
-                    quality: quality
-                }
-            })
+                    customerName: userPayload.name,
+                    email: userPayload.email,
+                    totalPrice: cost,
+                    user: {
+                        connect: { id: userId },
+                    },
+                    items: {
+                        create: [
+                            {
+                                bookId,
+                                quantity: quality,
+                                price: book.price,
+                            },
+                        ],
+                    },
+                },
+                include: {
+                    items: { include: { book: true } },
+                },
+            });
 
             return {
-                userId: userId,
-                bookId: bookId,
-                bookTitle: book.title,
-                cost: cost,
-                remaining: purchaser.balance,
-                orderId: order.id
+                status: 200,
+                message: `Successfully bought ${quality} × "${
+                    book.title
+                }" for ${cost}. Remaining balance: ${parseFloat(purchaser.balance.toFixed(2))}`,
+                data: {
+                    userId,
+                    bookId,
+                    bookTitle: book.title,
+                    cost,
+                    remaining: parseFloat(purchaser.balance.toFixed(2)),
+                    orderId: order.id,
+                },
             };
         });
-        return {
-            status: 200,
-            message: `User <${userId}> buy ${quality} books <${bookId}> successfully, cost: ${result.cost}, remain: ${result.remaining} .`,
-            data: result
-        };
+        return result;
     } catch(err: any) {
         console.error(err);
         return {
             status: 500,
-            message: `Failed to buy book ${bookId} for user ${userId}: ${err.message}`
+            message: `Failed to buy book ${bookId}: ${err.message}`,
+            data: {
+                userId: 0,
+                bookId,
+                bookTitle: '',
+                cost: 0,
+                remaining: 0,
+                orderId: 0,
+            },
         };
     }
 }
