@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRecoilState } from 'recoil';
 import { useSnackbar } from 'notistack';
 
-import Navbar from '../components/Navbar';
+import Header from '../components/Header';
 import Hero from '../components/Hero';
 import BookList from '../components/BookList';
 import Footer from '../components/Footer';
@@ -106,12 +105,6 @@ const dummyBooks: BookProps[] = [
 export default function HomePage() {
   const [shoppingCart, setShoppingCart] = useRecoilState(shoppingCartState);
   const { enqueueSnackbar } = useSnackbar();
-  const [cartItemCount, setCartItemCount] = useState(0);
-
-  useEffect(() => {
-    const count = shoppingCart.reduce((sum, item) => sum + item.quantity, 0);
-    setCartItemCount(count);
-  }, [shoppingCart]);
 
   const handleAddToCart = (book: BookProps) => {
     setShoppingCart((prevCart) => {
@@ -140,7 +133,7 @@ export default function HomePage() {
       </Head>
 
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-        <Navbar cartItemCount={cartItemCount} />
+        <Header />
         
         <main className="flex-grow">
           <Hero />
