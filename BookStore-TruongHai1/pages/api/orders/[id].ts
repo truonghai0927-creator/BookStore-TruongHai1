@@ -41,10 +41,12 @@ async function getOrderDetail(req: NextApiRequest) {
             user: {
                 select: {
                     id: true,
-                    nickname: true
-                }
+                    nickname: true,
+                },
             },
-            book: true
+            items: {
+                include: { book: true },
+            },
         },
     });
 
