@@ -1,83 +1,66 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import prisma from '../../../lib/prisma';
 
-import prisma from '../../../lib/prisma'
-
-const DEFAULT_PAGE_NUM = 1;
-const DEFAULT_PAGE_SIZE = 8;
-
-const orderListHandler = async (
+const orderHandler = async (
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) => {
-  if (req.method === 'GET') {
+  if (req.method === 'POST') {
     try {
-      res.status(200).json(await getOrderList(req));
-    } catch (err:any) {
-      console.error(err)
-      res.status(500).json({
-        message: err.message
-      })
-    }
-  } else {
-    res.status(401).json({
-      message: `HTTP method ${req.method} is not supported.`
-    });
-  }
-}
+      const { customerName, email, phone, address, items } = req.body;
 
-async function getOrderList(req: NextApiRequest) {
-  const query = parseOrderListQuery(req.query, true, true);
-  const orders: any[] = await prisma.order.findMany({
-    ...query,
-    include: {
-      user: {
-        select: {
-            id: true,
-            nickname: true
+      if (!customerName || !items || items.length === 0) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const totalPrice = items.reduce((sum: number, item: any) => 
+        sum + Number(item.price) * item.quantity, 0
+      );
+
+      const order = await prisma.order.create({
+        data: {
+          customerName,
+          email,
+          phone,
+          address,
+          totalPrice,
+          items: {
+            create: items.map((item: any) => ({
+              bookId: Number(item.id),
+              quantity: item.quantity,
+              price: Number(item.price)
+            }))
+          }
+        },
+        include: {
+          items: true
         }
-      },
-      book: true
-    },
-  });
+      });
 
-  // Counting.
-  const total = await prisma.order.count(parseOrderListQuery(req.query));
-
-  return {
-    content: orders,
-    total: total
-  }
-}
-
-function parseOrderListQuery(query: any, sorting: boolean = false, paging: boolean = false) {
-  const q:any = {}
-
-  q.where = {};
-  // TODO: get user ID for context.
-  if (typeof query.userId === 'string') {
-    q.where.userId = Number(query.userId);
+      res.status(201).json(order);
+    } catch (err: any) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  } else if (req.method === 'GET') {
+    try {
+      const orders = await prisma.order.findMany({
+        include: {
+          items: {
+            include: {
+              book: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      res.status(200).json(orders);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
   } else {
-    throw new Error('Must provide userId.');
+    res.status(405).json({ message: `HTTP method ${req.method} is not supported.` });
   }
+};
 
-  // Paging.
-  if (paging) {
-    let page = DEFAULT_PAGE_NUM;
-    let size = DEFAULT_PAGE_SIZE;
-    if (typeof query.page === 'string') {
-      page = parseInt(query.page);
-    }
-    if (typeof query.size === 'string') {
-      size = parseInt(query.size);
-    }
-    if (size < 0 || size > 100) {
-      throw new Error('Parameter `size` must between 0 and 100.');
-    }
-    q.take = size;
-    q.skip = (page - 1) * size;
-  }
-
-  return q;
-}
-
-export default orderListHandler;
+export default orderHandler;

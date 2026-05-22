@@ -177,12 +177,12 @@ const Cart: NextPage = () => {
                     ${totalPrice.toFixed(2)}
                   </span>
                 </div>
-                <button
-                  onClick={() => enqueueSnackbar('Checkout coming soon!', { variant: 'info' })}
-                  className="w-full py-4 bg-purple-600 text-white text-lg font-bold rounded-lg hover:bg-purple-700 transition-colors"
+<Link
+                  href="/checkout"
+                  className="w-full inline-block text-center py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-bold rounded-lg hover:shadow-lg transition-all duration-200"
                 >
                   Proceed to Checkout
-                </button>
+                </Link>
                 <button
                   onClick={clearCart}
                   className="w-full mt-3 py-3 text-gray-500 hover:text-red-500 transition-colors"
