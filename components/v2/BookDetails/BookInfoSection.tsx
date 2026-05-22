@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Link from 'next/link';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { HomeIcon, StarIcon, ShoppingCartIcon, CalendarIcon } from '@heroicons/react/24/outline';
@@ -149,7 +150,7 @@ export default function BookInfoSection({ book }: BookInfoSectionProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 mt-6">
               <button
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-0.5"
                 onClick={() => handleAddToCart(data)}
@@ -158,6 +159,13 @@ export default function BookInfoSection({ book }: BookInfoSectionProps) {
                 <ShoppingCartIcon className="w-5 h-5" />
                 {data.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
+              <Link
+                href="/cart"
+                className="px-6 py-3.5 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 text-center"
+                onClick={() => handleAddToCart(data)}
+              >
+                Buy Now
+              </Link>
             </div>
           </div>
         </div>
