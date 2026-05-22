@@ -149,22 +149,14 @@ export default function BookInfoSection({ book }: BookInfoSectionProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-4 mt-6">
               <button
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:-translate-y-0.5"
                 onClick={() => handleAddToCart(data)}
                 disabled={data.stock === 0}
               >
                 <ShoppingCartIcon className="w-5 h-5" />
-                Add to Cart
-              </button>
-              <button
-                className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => {
-                  editBookDetailDialogRef.current?.showModal();
-                }}
-              >
-                Edit
+                {data.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
             </div>
           </div>

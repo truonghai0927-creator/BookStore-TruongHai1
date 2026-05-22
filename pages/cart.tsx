@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -6,9 +5,9 @@ import Image from 'next/image';
 import { useRecoilState } from 'recoil';
 import { useSnackbar } from 'notistack';
 import { MinusIcon, PlusIcon, TrashIcon, ShoppingCartIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import Header from '../components/Header';
 
 import { shoppingCartState } from '../atoms';
-import { shoppingCartItemProps } from '../const';
 import { currencyFormat, calcCartItemTotalPrice } from '../lib/utils';
 
 const Cart: NextPage = () => {
@@ -56,7 +55,9 @@ const Cart: NextPage = () => {
       </Head>
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        {/* Header */}
+        <Header />
+
+        {/* Page Title */}
         <div className="bg-white dark:bg-gray-800 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
