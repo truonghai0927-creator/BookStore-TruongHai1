@@ -17,10 +17,13 @@ let prisma: PrismaClient
 const { TIDB_USER, TIDB_PASSWORD, TIDB_HOST, TIDB_PORT, TIDB_DB_NAME = 'bookshop', DATABASE_URL } = process.env;
 // Notice: When using TiDB Cloud Serverless Tier, you MUST enable TLS by setting sslaccept=strict.
 // See: https://docs.pingcap.com/developer/serverless-driver-prisma-example/
-const SSL_FLAGS = 'pool_timeout=60&sslaccept=strict';
-const databaseURL = DATABASE_URL
-    ? `${DATABASE_URL}${DATABASE_URL.includes('?') ? '&' : '?'}${SSL_FLAGS}`
-    : `mysql://${TIDB_USER}:${TIDB_PASSWORD}@${TIDB_HOST}:${TIDB_PORT}/${TIDB_DB_NAME}?${SSL_FLAGS}`;
+let databaseURL: string;
+if (DATABASE_URL) {
+  databaseURL = DATABASE_URL;
+} else {
+  const SSL_FLAGS = 'pool_timeout=60&sslaccept=strict';
+  databaseURL = `mysql://${TIDB_USER}:${TIDB_PASSWORD}@${TIDB_HOST}:${TIDB_PORT}/${TIDB_DB_NAME}?${SSL_FLAGS}`;
+}
 
 if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient({

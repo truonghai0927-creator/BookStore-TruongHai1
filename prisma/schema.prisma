@@ -1,59 +1,43 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity", "interactiveTransactions"]
+  provider = "prisma-client-js"
 }
-
-// TiDB is highly compatible with the MySQL 5.7 protocol and the common features 
-// and syntax of MySQL 5.7.
-//
-// TiDB currently does not support foreign key constraints. If you need to use the feature of 
-// referential integrity, you can use the application layer implementation of prisma.
-//
-// Refercene: https://www.prisma.io/docs/concepts/components/prisma-schema/relations/referential-integrity#handling-the-referential-integrity-in-prisma
-// Related Issue [WIP]: https://github.com/pingcap/tidb/issues/18209
-// 
-// More descriptions about MySQL compatibility:
-// Refercene: https://docs.pingcap.com/tidb/dev/mysql-compatibility
 
 datasource db {
-  provider             = "mysql"
-  url                  = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-// 
-// https://www.prisma.io/docs/concepts/components/prisma-schema/data-model
-
 model Author {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(100)
-  gender      Boolean?
-  birthYear   Int?     @db.SmallInt @map("birth_year")
-  deathYear   Int?     @db.SmallInt @map("death_year")
-  books       BookAuthor[]
-	@@map("authors")
+  id        Int          @id @default(autoincrement())
+  name      String       @db.VarChar(100)
+  gender    Boolean?
+  birthYear Int?         @db.SmallInt @map("birth_year")
+  deathYear Int?         @db.SmallInt @map("death_year")
+  books     BookAuthor[]
+  @@map("authors")
 }
 
 model BookAuthor {
   book     Book   @relation(fields: [bookId], references: [id])
-  bookId   Int  @map("book_id")
+  bookId   Int    @map("book_id")
   author   Author @relation(fields: [authorId], references: [id])
-  authorId Int @map("author_id")
+  authorId Int    @map("author_id")
 
   @@id([bookId, authorId])
-	@@map("book_authors")
+  @@map("book_authors")
 }
 
 model Book {
-  id           Int        @id @default(autoincrement())
-  title        String     @db.VarChar(100)
-  type         BookType
-  publishedAt  DateTime   @db.DateTime(0) @map("published_at")
-  stock        Int        @default(0)
-  price        Decimal    @default(0.0) @db.Decimal(15, 2)
-  authors      BookAuthor[]
-  ratings      Rating[]
-  orderItems   OrderItem[]
-	@@map("books")
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(100)
+  type        String      @db.VarChar(50)
+  publishedAt DateTime    @db.DateTime(0) @map("published_at")
+  stock       Int         @default(0)
+  price       Decimal     @default(0.0) @db.Decimal(15, 2)
+  authors     BookAuthor[]
+  ratings     Rating[]
+  orderItems  OrderItem[]
+  @@map("books")
 }
 
 model Order {
@@ -65,6 +49,8 @@ model Order {
   totalPrice    Decimal     @default(0.0) @db.Decimal(15, 2) @map("total_price")
   createdAt     DateTime    @default(now()) @db.DateTime(0) @map("created_at")
   items         OrderItem[]
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        Int?        @map("user_id")
   @@map("orders")
 }
 
@@ -89,7 +75,7 @@ model Rating {
 
   @@id([bookId, userId])
   @@unique([bookId, userId], map: "uniq_book_user_idx")
-	@@map("ratings")
+  @@map("ratings")
 }
 
 model User {
@@ -98,26 +84,10 @@ model User {
   password  String?   @db.VarChar(255)
   name      String?   @db.VarChar(100)
   balance   Decimal   @default(0.0) @db.Decimal(15, 2)
-  nickname String?   @unique(map: "nickname") @db.VarChar(100)
+  nickname  String?   @unique(map: "nickname") @db.VarChar(100)
   createdAt DateTime  @default(now()) @db.DateTime(0) @map("created_at")
-  ratings  Rating[]
+  ratings   Rating[]
+  orders    Order[]
 
   @@map("users")
-}
-
-// Because special characters cannot be used in the schema definition of the data model.
-// We use `_nbsp_` to represent one space and use `_amp_` to represent `&`.
-
-enum BookType {
-  Magazine
-  Novel
-  Life
-  Arts
-  Comics
-  Education_nbsp__amp__nbsp_Reference             @map("Education & Reference")
-  Humanities_nbsp__amp__nbsp_Social_nbsp_Sciences @map("Humanities & Social Sciences")
-  Science_nbsp__amp__nbsp_Technology              @map("Science & Technology")
-  Kids
-  Sports
-	@@map("books_type")
 }
