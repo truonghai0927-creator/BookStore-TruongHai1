@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useRecoilState } from 'recoil';
 import { useSnackbar } from 'notistack';
@@ -19,6 +19,12 @@ export default function Checkout() {
     phone: '',
     address: '',
   });
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      router.push('/');
+    }
+  }, [cart, router]);
 
   const totalPrice = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
@@ -72,7 +78,6 @@ export default function Checkout() {
   };
 
   if (cart.length === 0) {
-    router.push('/');
     return null;
   }
 
