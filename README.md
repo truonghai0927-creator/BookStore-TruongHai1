@@ -1,5 +1,6 @@
 ﻿# 📚 Bookstore — Cửa Hàng Sách Trực Tuyến
 
+xin chào
 Website bán sách trực tuyến với giao diện hiện đại, hỗ trợ đăng nhập/đăng ký, giỏ hàng, thanh toán và quản lý đánh giá sách.
 
 ---
