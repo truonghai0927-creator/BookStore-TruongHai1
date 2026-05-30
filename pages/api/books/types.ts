@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { BookType } from '@prisma/client';
-
-const bookTypes = Object.values(BookType);
+const bookTypes = ['FICTION', 'NON_FICTION', 'SCIENCE', 'TECHNOLOGY', 'HISTORY', 'BIOGRAPHY'];
 
 const bookTypeListHandler = async (
     req: NextApiRequest,

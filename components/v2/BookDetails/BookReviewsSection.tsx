@@ -66,12 +66,11 @@ function ReviewCard({ review, onDelete }: ReviewCardProps) {
           {/* Name and Rating */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              {/* @ts-expect-error: user may be null — guarded by getDisplayName */}
+              {/* user may be null — guarded by getDisplayName */}
               <h4 className="font-semibold text-gray-800 dark:text-gray-100 truncate">
                 {displayName}
               </h4>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {/* @ts-expect-error: user may be null */}
                 User ID: {String(review.user?.id ?? review.userId)}
               </p>
             </div>

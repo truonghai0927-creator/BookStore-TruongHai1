@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { BookType } from '@prisma/client';
 import prisma from '../../../lib/prisma'
 
 const DEFAULT_PAGE_NUM = 1;
@@ -16,7 +15,7 @@ enum SortOrder {
 };
 const sortTypes = Object.values(SortType);
 const sortOrders = Object.values(SortOrder);
-const bookTypes = Object.keys(BookType);
+const bookTypes = ['FICTION', 'NON_FICTION', 'SCIENCE', 'TECHNOLOGY', 'HISTORY', 'BIOGRAPHY'];
 
 const bookListHandler =  async (
   req: NextApiRequest,

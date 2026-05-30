@@ -1,4 +1,4 @@
-import { BookType, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import dotenv from 'dotenv';
 import { faker } from '@faker-js/faker';
@@ -108,7 +108,7 @@ async function seedAuthors(client, num) {
 }
 
 // Seed books data.
-const bookTypes = Object.keys(BookType);
+const bookTypes = ['FICTION', 'NON_FICTION', 'SCIENCE', 'TECHNOLOGY', 'HISTORY', 'BIOGRAPHY'];
 async function seedBooks(client, num) {
   const records = [...Array(num)].map((value, index) => {
     const id = index + 1;

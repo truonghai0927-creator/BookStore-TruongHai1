@@ -1,4 +1,4 @@
-const { PrismaClient, BookType } = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 const { faker } = require('@faker-js/faker');
 require('dotenv').config();
 
@@ -54,7 +54,7 @@ async function seedAuthors(num) {
 }
 
 async function seedBooks(num) {
-  const bookTypes = Object.values(BookType);
+   const bookTypes = ['FICTION', 'NON_FICTION', 'SCIENCE', 'TECHNOLOGY', 'HISTORY', 'BIOGRAPHY'];
   const records = Array.from({ length: num }, (_, i) => {
     const randomType = bookTypes[Math.floor(Math.random() * bookTypes.length)];
     const randomDate = new Date(2000 + Math.floor(Math.random() * 25), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
